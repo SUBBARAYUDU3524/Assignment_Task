@@ -5,45 +5,19 @@ import { toast } from "react-hot-toast";
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState([]);
+  const [employeeData, setEmployeeData] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [editModal, setEditModal] = useState(false); // For the edit modal
-  const [employeeData, setEmployeeData] = useState({
-    employeeName: "",
-    employeeEmail: "",
-    employeeMobile: "",
-    employeeDesignation: "",
-    employeeGender: "",
-    employeeCourses: "",
-    employeeImage: null,
-  });
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const employeesPerPage = 5; // Adjust the number of employees per page
 
-  const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  // Fetch employee data on component mount
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/api/employees/getemployee",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Include the token in the request header
-            },
-          }
-        );
-        setEmployees(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to fetch employee data");
-        setLoading(false);
-      }
-    };
-    fetchEmployees();
-  }, []);
-  console.log(employees, "em[pdkfdata");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,22 +47,26 @@ const EmployeeList = () => {
       setDeleteModal(false);
     }
   };
-
   // Handle edit action
   const handleEdit = (id) => {
     const employeeToEdit = employees.find((employee) => employee._id === id);
-    setEmployeeData({
-      employeeName: employeeToEdit.employeeName,
-      employeeEmail: employeeToEdit.employeeEmail,
-      employeeMobile: employeeToEdit.employeeMobile,
-      employeeDesignation: employeeToEdit.employeeDesignation,
-      employeeGender: employeeToEdit.employeeGender,
-      employeeCourses: employeeToEdit.employeeCourses,
-    });
-    setSelectedEmployee(id);
-    setEditModal(true);
+    if (employeeToEdit) {
+      setEmployeeData({
+        employeeName: employeeToEdit.employeeName,
+        employeeEmail: employeeToEdit.employeeEmail,
+        employeeMobile: employeeToEdit.employeeMobile,
+        employeeDesignation: employeeToEdit.employeeDesignation,
+        employeeGender: employeeToEdit.employeeGender,
+        employeeCourses: employeeToEdit.employeeCourses,
+      });
+      setSelectedEmployee(id);
+      setEditModal(true); // Make sure `editModal` state is correctly defined and imported
+    } else {
+      toast.error("Employee not found for editing.");
+    }
   };
 
+  // Handle update action
   const handleUpdate = async () => {
     try {
       await axios.put(
@@ -114,6 +92,64 @@ const EmployeeList = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/employees/getemployee",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setEmployees(response.data);
+        setFilteredEmployees(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch employee data");
+        setLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
+
+  // Filter employees by search
+  useEffect(() => {
+    const lowerCaseSearch = search.toLowerCase();
+    const filtered = employees.filter(
+      (employee) =>
+        employee.employeeName.toLowerCase().includes(lowerCaseSearch) ||
+        employee.employeeEmail.toLowerCase().includes(lowerCaseSearch)
+    );
+    setFilteredEmployees(filtered);
+  }, [search, employees]);
+
+  // Sort employees
+  useEffect(() => {
+    let sorted = [...filteredEmployees];
+    if (sortField === "name") {
+      sorted.sort((a, b) => a.employeeName.localeCompare(b.employeeName));
+    } else if (sortField === "email") {
+      sorted.sort((a, b) => a.employeeEmail.localeCompare(b.employeeEmail));
+    } else if (sortField === "date") {
+      sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    }
+    setFilteredEmployees(sorted);
+  }, [sortField]);
+
+  const totalPages = Math.ceil(filteredEmployees.length / employeesPerPage);
+  const indexOfLastEmployee = currentPage * employeesPerPage;
+  const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
+  const currentEmployees = filteredEmployees.slice(
+    indexOfFirstEmployee,
+    indexOfLastEmployee
+  );
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -124,8 +160,30 @@ const EmployeeList = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Employee List</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-800">Employee List</h2>
 
+      {/* Search Bar and Sort Dropdown */}
+      <div className="flex justify-between items-center mb-4">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border px-4 py-2 rounded w-1/3"
+        />
+        <select
+          value={sortField}
+          onChange={(e) => setSortField(e.target.value)}
+          className="border px-4 py-2 rounded"
+        >
+          <option value="">Sort By</option>
+          <option value="name">Name</option>
+          <option value="email">Email</option>
+          <option value="date">Date</option>
+        </select>
+      </div>
+
+      {/* Employee Table */}
       <table className="min-w-full bg-white rounded-lg shadow overflow-hidden border">
         <thead className="bg-gray-800 text-white">
           <tr>
@@ -137,12 +195,11 @@ const EmployeeList = () => {
             <th className="px-4 py-2">Gender</th>
             <th className="px-4 py-2">Course</th>
             <th className="px-4 py-2">CreatedAt</th>
-
             <th className="px-4 py-2">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {employees.map((employee) => (
+          {currentEmployees.map((employee) => (
             <tr
               key={employee._id}
               className="text-center hover:bg-gray-100 border-b"
@@ -169,7 +226,6 @@ const EmployeeList = () => {
                   timeZone: "Asia/Kolkata",
                 })}
               </td>
-
               <td className="px-4 py-2 space-x-2">
                 <button
                   onClick={() => handleEdit(employee._id)}
@@ -192,7 +248,23 @@ const EmployeeList = () => {
         </tbody>
       </table>
 
-      {/* Edit Employee Modal */}
+      {/* Pagination */}
+      <div className="flex justify-center items-center mt-4 space-x-2">
+        {[...Array(totalPages)].map((_, i) => (
+          <button
+            key={i}
+            onClick={() => handlePageChange(i + 1)}
+            className={`px-3 py-1 rounded-md ${
+              currentPage === i + 1
+                ? "bg-gray-800 text-white"
+                : "bg-gray-300 hover:bg-gray-400"
+            }`}
+          >
+            {i + 1}
+          </button>
+        ))}
+      </div>
+
       {editModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow p-6 w-96">
