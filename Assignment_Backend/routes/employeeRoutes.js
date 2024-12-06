@@ -13,10 +13,7 @@ const {
 const router = express.Router();
 const upload = require("../middleware/upload");
 const authMiddleware = require("../middleware/authMiddleware");
-// File Upload Middleware
 
-// Employee Routes
-router.get("/getemployee/:id", authMiddleware, getEmployees);
 router.get("/getemployee", authMiddleware, getEmployees);
 router.post(
   "/addemployee",
@@ -25,7 +22,6 @@ router.post(
   addEmployee
 );
 
-// Update Employee
 router.put(
   "/updateemployee/:id",
   upload.single("employeeImage"),
@@ -34,7 +30,6 @@ router.put(
 );
 router.delete("/deleteemployee/:id", authMiddleware, deleteEmployee);
 
-// Authentication Routes
 router.post("/login", login);
 router.get("/myprofile", authMiddleware, getProfile);
 

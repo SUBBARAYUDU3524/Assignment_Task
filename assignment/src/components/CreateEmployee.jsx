@@ -41,7 +41,7 @@ const CreateEmployee = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
+    console.log(employeeData);
     const formData = new FormData();
     Object.keys(employeeData).forEach((key) => {
       if (key === "employeeCourses") {

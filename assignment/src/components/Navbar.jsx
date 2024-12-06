@@ -44,6 +44,12 @@ const Navbar = () => {
 
       <div className="hidden md:flex space-x-8 text-xl">
         <a
+          href="/home"
+          className="text-white hover:text-yellow-400 transition-colors"
+        >
+          Home
+        </a>
+        <a
           href="/employee-list"
           className="text-white hover:text-yellow-400 transition-colors"
         >

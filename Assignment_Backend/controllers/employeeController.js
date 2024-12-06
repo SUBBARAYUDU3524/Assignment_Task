@@ -3,12 +3,12 @@ const jwt = require("jsonwebtoken");
 const Employee = require("../models/Employee");
 const addEmployee = require("../models/EmployeeAdd");
 const cloudinary = require("cloudinary").v2;
-
-// Configure Cloudinary with your credentials (get these from Cloudinary Dashboard)
+const dotenv = require("dotenv");
+dotenv.config();
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME, // Replace with your Cloudinary Cloud Name
-  api_key: process.env.API_KEY, // Replace with your Cloudinary API Key
-  api_secret: process.env.API_SECRET, // Replace with your Cloudinary API Secret
+  cloud_name: "dzbp8oezd",
+  api_key: "828182943287739",
+  api_secret: "KthCYSt75fN2tvFzft_O4zZjMn4",
 });
 // Employee Operations
 exports.getEmployees = async (req, res) => {
@@ -31,19 +31,23 @@ exports.addEmployee = async (req, res) => {
       employeeCourses,
     } = req.body;
 
+    // Check if the employee email already exists
     const existingEmployee = await addEmployee.findOne({ employeeEmail });
     if (existingEmployee) {
       return res.status(400).json({ error: "Email already exists" });
     }
 
+    // Upload image to Cloudinary (if provided)
     let employeeImageUrl = null;
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "employee_images",
+        folder: "employee_images", // Optional: specify a folder in Cloudinary
+        public_id: `${Date.now()}_${req.file.originalname}`, // Optional: custom image public ID
       });
-      employeeImageUrl = result.secure_url;
+      employeeImageUrl = result.secure_url; // Cloudinary image URL
     }
 
+    // Create and save the new employee
     const employee = new addEmployee({
       employeeName,
       employeeEmail,
@@ -51,7 +55,7 @@ exports.addEmployee = async (req, res) => {
       employeeDesignation,
       employeeGender,
       employeeCourses,
-      employeeImage: employeeImageUrl,
+      employeeImage: employeeImageUrl, // Store Cloudinary URL
     });
 
     await employee.save();

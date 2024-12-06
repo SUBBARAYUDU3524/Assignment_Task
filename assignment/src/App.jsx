@@ -7,6 +7,7 @@ import CreateEmployee from "./components/CreateEmployee";
 import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
 import ProtectiveRoute from "./ProtectiveRoute";
+import Home from "./components/Home";
 
 function App() {
   const location = useLocation();
@@ -15,6 +16,7 @@ function App() {
     "/dashboard",
     "/create-employee",
     "/employee-list",
+    "/home",
   ].includes(location.pathname);
 
   return (
@@ -29,6 +31,7 @@ function App() {
           {/* Add more protected routes here */}
           <Route path="/employee-list" element={<EmployeeList />} />
           <Route path="/create-employee" element={<CreateEmployee />} />
+          <Route path="/home" element={<Home />} />
         </Route>
       </Routes>
     </>

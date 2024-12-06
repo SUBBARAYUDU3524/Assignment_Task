@@ -136,6 +136,8 @@ const EmployeeList = () => {
             <th className="px-4 py-2">Designation</th>
             <th className="px-4 py-2">Gender</th>
             <th className="px-4 py-2">Course</th>
+            <th className="px-4 py-2">CreatedAt</th>
+
             <th className="px-4 py-2">Actions</th>
           </tr>
         </thead>
@@ -162,6 +164,11 @@ const EmployeeList = () => {
               <td className="px-4 py-2">{employee.employeeDesignation}</td>
               <td className="px-4 py-2">{employee.employeeGender}</td>
               <td className="px-4 py-2">{employee.employeeCourses}</td>
+              <td className="px-4 py-2">
+                {new Date(employee.createdAt).toLocaleString("en-IN", {
+                  timeZone: "Asia/Kolkata",
+                })}
+              </td>
 
               <td className="px-4 py-2 space-x-2">
                 <button
